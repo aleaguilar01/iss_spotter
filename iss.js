@@ -21,6 +21,7 @@ const fetchCoordsByIP = (ip, callback) => {
   if (!ip) {
     const msg = "There was no IP";
     callback(Error(msg));
+    return;
   }
   
   request(`http://ipwho.is/${ip}`, (error,response, body) => {
@@ -36,8 +37,6 @@ const fetchCoordsByIP = (ip, callback) => {
     }
 
     const {latitude, longitude, success, message} = JSON.parse(body);
-    console.log(success);
-    console.log(message);
 
     if (!success) {
       callback(Error(message), null);
@@ -48,5 +47,29 @@ const fetchCoordsByIP = (ip, callback) => {
 
 };
 
+const fetchISSFlyOverTimes = (geolocation, callback) => {
+  if (!geolocation) {
+    const msg = "No coordenates to fetch the ISS";
+    callback(Error(msg));
+    return;
+  }
 
-module.exports = {fetchMyIP, fetchCoordsByIP};
+  request(`https://iss-flyover.herokuapp.com/json/?lat=${geolocation.latitude}&lon=${geolocation.longitude}`, (error, response, body) => {
+    if (error) {
+      callback(error, null);
+      return;
+    }
+
+    if (response.statusCode !== 200) {
+      const msg = `Status Code ${response.statusCode} when fetching ISS. Response: ${body}`;
+      callback(Error(msg), null);
+      return;
+    }
+
+    callback(null, JSON.parse(body).response);
+  }
+  );
+
+};
+
+module.exports = {fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes};
