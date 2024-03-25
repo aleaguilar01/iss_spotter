@@ -72,4 +72,35 @@ const fetchISSFlyOverTimes = (geolocation, callback) => {
 
 };
 
-module.exports = {fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes};
+const nextISSTimesForMyLocation = function(callback) {
+  fetchMyIP((error, ip) => {
+    if (error) {
+      callback(error, null);
+      return;
+    }
+  
+    fetchCoordsByIP(ip, (error, geolocation) => {
+      if (error) {
+        callback(error, null);
+        return;
+      }
+      fetchISSFlyOverTimes(geolocation, (error, issResponse) => {
+        if (error) {
+          callback(error, null);
+          return;
+        }
+        let arr = [];
+        for (let pass of issResponse) {
+          let d = new Date(0);
+          d.setUTCSeconds(pass.risetime);
+          arr.push(`Next pass at ${d.toDateString()} ${d.toTimeString()} for ${pass.duration} seconds!`);
+        }
+        callback(null, arr.join("\n"));
+      }
+      );
+    });
+  });
+  
+};
+
+module.exports = {nextISSTimesForMyLocation};
